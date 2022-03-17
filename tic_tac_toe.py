@@ -4,6 +4,17 @@ import random
 
 
 def create_board():
+    '''
+    Description:
+
+
+    Parameters:
+
+
+    Returns:
+
+
+    '''
     system('cls')
     while True:
         player_input = input('Select a board size (3-20):')
@@ -17,19 +28,34 @@ def create_board():
             system('cls')
             print('Not a valid board size.')
             continue
-        board_state = {}
-        board_size = player_input*player_input
+        board_size = player_input**2
+        board_state = {'board_size':player_input, 'draw_counter':board_size}
         for number in range(board_size):
             number += 1
             board_state[number] = str(number)
+        board_state = create_win_conditions(board_state)
 
-        return board_state, player_input
+        return board_state
 
-def create_win_conditions(board_state, board_size):
+def create_win_conditions(board_state):
+    '''
+    Description:
+
+
+    Parameters:
+
+
+    Returns:
+
+
+    '''
     winning_list = []
     winning_set = []
+    board_size = board_state['board_size']
 
-    for value in board_state.values():
+    for key, value in board_state.items():
+        if key == 'board_size' or key == 'draw_counter':
+            continue
         winning_set.append(value)
         if len(winning_set) == board_size:
             winning_list.append(winning_set)
@@ -53,9 +79,22 @@ def create_win_conditions(board_state, board_size):
         winning_set.append(item[board_size])
     winning_list.append(winning_set)
 
-    return winning_list
+    board_state['winning_list'] = winning_list
 
-def draw_board(board_state, board_size) :
+    return board_state
+
+def draw_board(board_state) :
+    '''
+    Description:
+
+
+    Parameters:
+
+
+    Returns:
+
+
+    '''
     '''
     dict: The dictionary of the current board statement
     Returns a print of the board.
@@ -67,8 +106,10 @@ def draw_board(board_state, board_size) :
     print()
     print('  ', end='')
     for key, value in board_state.items():
-        if len(board_state) - key < board_size:
-            if print_counter < board_size:
+        if key == 'board_size' or key == 'draw_counter' or key == 'winning_list':
+            continue
+        if board_state['board_size']**2 - key < board_state['board_size']:
+            if print_counter < board_state['board_size']:
                 if key <= 9 or value in ('X', 'O'):
                     print('  '+value+'  |', end='')
                     print_counter +=1
@@ -81,7 +122,7 @@ def draw_board(board_state, board_size) :
                     print(' '+value+' |', end='')
                     print_counter +=1
                     continue
-            if print_counter >= board_size:
+            if print_counter >= board_state['board_size']:
                 if key <= 9 or value in ('X', 'O'):
                     print('  '+value+'  ')
                     print_counter = 1
@@ -98,7 +139,7 @@ def draw_board(board_state, board_size) :
                     print('  ', end='')
                     continue
         else:
-            if print_counter < board_size:
+            if print_counter < board_state['board_size']:
                 if key <= 9 or value in ('X', 'O'):
                     print('__'+value+'__|', end='')
                     print_counter +=1
@@ -111,7 +152,7 @@ def draw_board(board_state, board_size) :
                     print('_'+value+'_|', end='')
                     print_counter +=1
                     continue
-            if  print_counter >= board_size:
+            if  print_counter >= board_state['board_size']:
                 if key <= 9 or value in ('X', 'O'):
                     print('__'+value+'__')
                     print_counter = 1
@@ -129,7 +170,18 @@ def draw_board(board_state, board_size) :
                     continue
     print()
 
-def are_you_winning(board_state, winning_list, board_size) :
+def are_you_winning(board_state) :
+    '''
+    Description:
+
+
+    Parameters:
+
+
+    Returns:
+
+
+    '''
     '''
     list: list of move the play has made
     return true if three in a row, else returns false
@@ -137,7 +189,7 @@ def are_you_winning(board_state, winning_list, board_size) :
     win_counter_x = 0
     win_counter_o = 0
 
-    for list in winning_list:
+    for list in board_state['winning_list']:
         win_counter_x = 0
         win_counter_o = 0
         for item in list:
@@ -148,60 +200,107 @@ def are_you_winning(board_state, winning_list, board_size) :
             if board_state[item] == 'O':
                 win_counter_o += 1
                 win_counter_x = 0
-            if win_counter_x == board_size:
+            if win_counter_x == board_state['board_size']:
                 return True
-            if win_counter_o == board_size:
+            if win_counter_o == board_state['board_size']:
                 return True
     return False
 
-def print_win_or_draw(board_state, winning_list, board_size, draw_counter, player):
+def print_win_or_draw(board_state, player):
+    '''
+    Description:
+
+
+    Parameters:
+
+
+    Returns:
+
+
+    '''
     if player == 1:
         x_o_message = 'X'
     if player == 2:
         x_o_message = 'O'
-    if are_you_winning(board_state, winning_list, board_size) :
-        draw_board(board_state, board_size)
+    if are_you_winning(board_state) :
+        draw_board(board_state)
         print(x_o_message, 'won!')
         input('Press Enter.')
         return exit()
-    draw_counter +=1
-    if draw_counter >= board_size * board_size:
-        draw_board(board_state, board_size)
-        print("it's a draw!")
+    board_state['draw_counter'] -=1
+    if board_state['draw_counter'] <= 0:
+        draw_board(board_state)
+        print("It's a draw!")
         input('Press Enter.')
         return exit()
-    return draw_counter
+    return None
 
-def is_valid_move(board_state, board_size, player):
+def is_last_move(board_state):
+    moves_left = []
+    for index in range(1,board_state['board_size']**2 + 1):
+        if board_state[index] in ('X', 'O'):
+            continue
+        else:
+            moves_left.append(index)
+    return moves_left
+
+
+def is_valid_move(board_state, player):
+    '''
+    Description:
+
+
+    Parameters:
+
+
+    Returns:
+
+
+    '''
     if player == 1:
         x_o_message = 'X'
     if player == 2:
         x_o_message = 'O'
-    draw_board(board_state, board_size)
+    draw_board(board_state)
     print()
     while True:
         print("Player", str(player) + "'s Turn")
-        player_input = input('Select a space for ' + x_o_message + ':')
+        player_input = is_last_move(board_state)
+        if len(player_input) == 1:
+            return int(player_input[0])
+        else:
+            player_input = input('Select a space for ' + x_o_message + ':')
         if player_input.lower() in ('exit', 'quit'):
             return exit()
         try:
             player_input = int(player_input)
         except:
-            draw_board(board_state, board_size)
+            draw_board(board_state)
             print('Not a valid space for', x_o_message)
             continue
         if player_input not in board_state.keys() or board_state[player_input] in ('X', 'O'):
-            draw_board(board_state, board_size)
+            draw_board(board_state)
             print('Not a valid space for', x_o_message)
             continue
         return player_input
 
-def is_random_move(board_state, board_size, player):
+def is_random_move(board_state, player):
+    '''
+    Description:
+
+
+    Parameters:
+
+
+    Returns:
+
+
+    '''
     if player == 1:
         x_o_message = 'X'
     if player == 2:
         x_o_message = 'O'
-    draw_board(board_state, board_size)
+    draw_board(board_state)
     print()
     while True:
         print("Player", str(player) + "'s Turn")
@@ -209,10 +308,10 @@ def is_random_move(board_state, board_size, player):
         print('Player', str(player), 'is thinking...')
         time.sleep(1)
         while True:
-            player_input = random.choice(range(1, board_size*board_size + 1))
+            player_input = random.choice(range(1, board_state['board_size']**2 + 1))
             if board_state[player_input] in ('X', 'O'):
                 continue
-            draw_board(board_state, board_size)
+            draw_board(board_state)
             print()
             print("Player", str(player) + "'s Turn")
             print('Select a space for ' + x_o_message + ':', player_input)
@@ -222,58 +321,94 @@ def is_random_move(board_state, board_size, player):
 
 
 
-def hard_pick(board_state, board_size) :
-    if board_size == 3:
+def is_hard_move(board_state, player) :
+    '''
+    Description:
+
+
+    Parameters:
+
+
+    Returns:
+
+
+    '''
+    if player == 1:
+        x_o_message = 'X'
+    if player == 2:
+        x_o_message = 'O'
+    draw_board(board_state)
+    print()
+    print("Player", str(player) + "'s Turn")
+    print('Select a space for ' + x_o_message + ':')
+    print('Player', str(player), 'is thinking...')
+    time.sleep(1)
+    if board_state['board_size'] == 3:
         if board_state[5] not in ('X', 'O'):
             return '5'
-        elif '5' in x_space :
-            if '1' in x_space and '9' not in o_space :
+        elif board_state[5] in ('X'):
+            if board_state[1] in ('X') and board_state[9] not in ('O'):
                 return '9'
-            elif '2' in x_space and '8' not in o_space :
+            elif board_state[2] in ('X') and board_state[8] not in ('O'):
                 return '8'
-            elif '3' in x_space and '7' not in o_space :
+            elif board_state[3] in ('X') and board_state[7] not in ('O'):
                 return '7'
-            elif '4' in x_space and '6' not in o_space :
+            elif board_state[4] in ('X') and board_state[6] not in ('O'):
                 return '6'
-            elif '6' in x_space and '4' not in o_space :
+            elif board_state[6] in ('X') and board_state[4] not in ('O'):
                 return '4'
-            elif '7' in x_space and '3' not in o_space :
+            elif board_state[7] in ('X') and board_state[3] not in ('O'):
                 return '3'
-            elif '8' in x_space and '2' not in o_space :
+            elif board_state[8] in ('X') and board_state[2] not in ('O'):
                 return '2'
-            elif '9' in x_space and '1' not in o_space :
+            elif board_state[9] in ('X') and board_state[1] not in ('O'):
                 return '1'
-        elif '5' in o_space :
-            if '1' in x_space and '2' in x_space and '3' not in o_space :
+        elif board_state[5] in ('O'):
+            if board_state[1] in ('X') and board_state[2] in ('X') and board_state[3] not in ('O'):
                 return '3'
-            elif '2' in x_space and '3' in x_space and '1' not in o_space :
+            elif board_state[2] in ('X') and board_state[2] in ('X') and board_state[1] not in ('O'):
                 return '1'
-            elif '1' in x_space and '3' in x_space and '2' not in o_space :
+            elif board_state[1] in ('X') and board_state[3] in ('X') and board_state[2] not in ('O'):
                 return '2'
-            elif '1' in x_space and '4' in x_space and '7' not in o_space :
+            elif board_state[1] in ('X') and board_state[4] in ('X') and board_state[7] not in ('O'):
                 return '7'
-            elif '4' in x_space and '7' in x_space and '1' not in o_space :
+            elif board_state[4] in ('X') and board_state[7] in ('X') and board_state[1] not in ('O'):
                 return '1'
-            elif '1' in x_space and '7' in x_space and '4' not in o_space :
+            elif board_state[1] in ('X') and board_state[7] in ('X') and board_state[4] not in ('O'):
                 return '4'
-            elif '3' in x_space and '6' in x_space and '9' not in o_space :
+            elif board_state[3] in ('X') and board_state[6] in ('X') and board_state[9] not in ('O'):
                 return '9'
-            elif '6' in x_space and '9' in x_space and '3' not in o_space :
+            elif board_state[6] in ('X') and board_state[9] in ('X') and board_state[3] not in ('O'):
                 return '3'
-            elif '3' in x_space and '9' in x_space and '6' not in o_space :
+            elif board_state[3] in ('X') and board_state[9] in ('X') and board_state[6] not in ('O'):
                 return '6'
-            elif '7' in x_space and '8' in x_space and '9' not in o_space :
+            elif board_state[7] in ('X') and board_state[8] in ('X') and board_state[9] not in ('O'):
                 return '9'
-            elif '8' in x_space and '9' in x_space and '7' not in o_space :
+            elif board_state[8] in ('X') and board_state[9] in ('X') and board_state[7] not in ('O'):
                 return '7'
-            elif '7' in x_space and '9' in x_space and '8' not in o_space :
+            elif board_state[7] in ('X') and board_state[9] in ('X') and board_state[8] not in ('O'):
                 return '8'
-        return random.choice(space_left)
+        while True:
+            player_input = random.choice(range(1, board_state['board_size']**2 + 1))
+            if board_state[player_input] in ('X', 'O'):
+                continue
+            return player_input
 
 
 def main_menu() :
+    '''
+    Description:
+
+
+    Parameters:
+
+
+    Returns:
+
+
+    '''
     system('cls')
-    print('Welcome to Tic-Tac_Toe!')
+    print('Welcome to Tic-Tac-Toe!')
     print('1. 1 Player')
     print('2. 2 Player')
     print('3. Quit')
@@ -298,6 +433,17 @@ def main_menu() :
             continue
 
 def sub_menu_1_player():
+    '''
+    Description:
+
+
+    Parameters:
+
+
+    Returns:
+
+
+    '''
     system('cls')
     print('Select a difficulty or go back')
     print('1. Easy')
@@ -310,12 +456,7 @@ def sub_menu_1_player():
         elif player_input.lower() in ('2', '2.', 'hard'):
             play_game_hard()
         elif player_input.lower() in ('3', '3.', 'back'):
-            system('cls')
-            print('Welcome to Tic-Tac_Toe!')
-            print('1. 1 Player')
-            print('2. 2 Player')
-            print('3. Quit')
-            return None
+            return main_menu()
         else:
             system('cls')
             print('Select a difficulty or go back')
@@ -325,100 +466,79 @@ def sub_menu_1_player():
             print('Invalid Input')
             continue
 
-def play_game() :
-    board_state, board_size = create_board()
-    winning_list = create_win_conditions(board_state, board_size)
-    draw_counter = 0
+def play_game():
+    '''
+    Description:
+
+
+    Parameters:
+
+
+    Returns:
+
+
+    '''
+    board_state = create_board()
 
     while True:
-        x_move = is_valid_move(board_state, board_size, 1)
-        board_state[int(x_move)] = 'X'
-        draw_counter = print_win_or_draw(board_state, winning_list, board_size, draw_counter, 1)
+        #x_move = is_valid_move(board_state, 1)
+        board_state[int(is_valid_move(board_state, 1))] = 'X'
+        print_win_or_draw(board_state, 1)
 
-        o_move = is_valid_move(board_state, board_size, 2)
-        board_state[int(o_move)] = 'O'
-        draw_counter = print_win_or_draw(board_state, winning_list, board_size, draw_counter, 2)
+        #o_move = is_valid_move(board_state, 2)
+        board_state[int(is_valid_move(board_state, 2))] = 'O'
+        print_win_or_draw(board_state, 2)
 
     exit()
 
 
-def play_game_easy() :
-    board_state, board_size = create_board()
-    winning_list = create_win_conditions(board_state, board_size)
-    draw_counter = 0
+def play_game_easy():
+    '''
+    Description:
+
+
+    Parameters:
+
+
+    Returns:
+
+
+    '''
+    board_state = create_board()
 
     while True:
-        x_move = is_valid_move(board_state, board_size, 1)
-        board_state[int(x_move)] = 'X'
-        draw_counter = print_win_or_draw(board_state, winning_list, board_size, draw_counter, 1)
+        #x_move = is_valid_move(board_state, 1)
+        board_state[int(is_valid_move(board_state, 1))] = 'X'
+        print_win_or_draw(board_state, 1)
 
-        o_move = is_random_move(board_state, board_size, 2)
-        board_state[int(o_move)] = 'O'
-        draw_counter = print_win_or_draw(board_state, winning_list, board_size, draw_counter, 2)
+        #o_move = is_random_move(board_state, 2)
+        board_state[int(is_random_move(board_state, 2))] = 'O'
+        print_win_or_draw(board_state, 2)
 
     exit()
 
-def play_game_hard() :
-    valid_spaces = '123456789'
-    x_space = []
-    o_space = []
-    board_state = {1:'1' , 2:'2', 3:'3', 4:'4', 5:'5', 6:'6', 7:'7', 8:'8', 9:'9'}
-    draw_counter = 9
-    space_left = ['1','2','3','4','5','6','7','8','9']
-    system('cls')
-    draw_board(board_state)
-    print()
-    while draw_counter > 0 :
-        while draw_counter > 0 :
-            print("Player 1's Turn")
-            x_input = input('Select a space for X: ')
-            if x_input not in valid_spaces or x_input in x_space + o_space :
-                system('cls')
-                draw_board(board_state)
-                print('Not a valid space for X')
-                continue
-            system('cls')
-            x_space.append(x_input)
-            space_left.remove(x_input)
-            board_state[int(x_input)] = 'X'
-            draw_board(board_state)
-            break
-        if are_you_winning(x_space) :
-            print()
-            print('X won!')
-            break
-        else:
-            draw_counter -= 1
-            print()
-        while draw_counter > 0 :
-            print("Player 2 is thinking")
-            o_input = hard_pick(x_space, o_space, space_left)
-            if o_input not in valid_spaces or o_input in x_space + o_space :
-                system('cls')
-                draw_board(board_state)
-                print('Not a valid space for O')
-                print(o_input)
-                print(space_left)
-                print(x_space)
-                print(o_space)
-                time.sleep(5)
-                continue
-            time.sleep(1)
-            system('cls')
-            o_space.append(o_input)
-            space_left.remove(o_input)
-            board_state[int(o_input)] = 'O'
-            draw_board(board_state)
-            break
-        if are_you_winning(o_space) :
-            print('O won!')
-            break
-        elif draw_counter > 0:
-            draw_counter -= 1
-            print()
-    if draw_counter <= 0 :
-        print("it's a draw!")
-    input('Press Enter.')
+def play_game_hard():
+    '''
+    Description:
+
+
+    Parameters:
+
+
+    Returns:
+
+
+    '''
+    board_state = {'board_size':3, 'draw_counter':9, 1:'1' , 2:'2', 3:'3', 4:'4', 5:'5', 6:'6', 7:'7', 8:'8', 9:'9'}
+    board_state = create_win_conditions(board_state)
+
+    while True:
+        board_state[int(is_valid_move(board_state, 1))] = 'X'
+        print_win_or_draw(board_state, 1)
+
+        board_state[int(is_hard_move(board_state, 2))] = 'O'
+        print_win_or_draw(board_state, 2)
+
     exit()
 
 
